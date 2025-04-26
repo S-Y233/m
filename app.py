@@ -1,119 +1,71 @@
-
 import streamlit as st
 import joblib
 import pandas as pd
 
-# Load models
+# تحميل الموديلات
 model_tourist_number = joblib.load('weights/model_tourist_number.pkl')
 model_model_value = joblib.load('weights/model_model_value.pkl')
 
-# Apply font and styling
-st.markdown("""<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
-<style>
-html, body, [class*="css"]  {
-    font-family: 'Tajawal', sans-serif;
-    background: #fffdf5 !important;
-    background-color: #fffdf5 !important;
-}
-.stApp {
-    background-color: #fffdf5 !important;
-}
-.block-container {
-    background-color: #fffdf5 !important;
-}
-.stButton > button {
-    font-size: 18px;
-    padding: 10px 25px;
-    border-radius: 8px;
-    background-color: #f63366;
-    color: white;
-    border: none;
-}
-h1.title-green {
-    color: #567d46;
-    text-align: center;
-    font-size: 38px;
-}
-h3.custom-subtitle {
-    font-size: 20px;
-    color: #333333;
-    margin-bottom: 25px;
-}
-</style>""", unsafe_allow_html=True)
+# واجهة الموقع
+st.sidebar.title("\ud83d\udcd6 About the App")
+st.sidebar.info("""
+Welcome to the **Tourism Prediction App**!  
+This app predicts:
+- **Number of Tourists Indicator**  
+- **Tourism Income (SAR)**
 
-# Page control
-if 'page' not in st.session_state:
-    st.session_state.page = 'welcome'
+Based on selected inputs like:  
+- Province  
+- Tourism Type  
+- Indicator  
+- Year  
+- Month  
+""")
+st.sidebar.markdown("---")
 
-# Welcome Page
-if st.session_state.page == 'welcome':
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.image("img/murtad_logo.png", width=1000)
+st.title("\ud83e\uddf3 Welcome To Murtad")
+st.header("Customize Your Tourism Forecast:")
 
-    st.markdown("""
-        <div style="text-align: center;">
-            <p style="font-size:16px;">
-                Here, data speaks the language of the future.<br>
-                We reveal the stories behind the numbers behind destinations,<br>
-                so your vision is clearer and your steps are smarter.<br><br>
-                Explore the future of tourism trends and spending in Saudi Arabia<br>
-                with AI-powered insights and predictions.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #f5f5dc;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-    if st.button("🚀 Get Started"):
-        st.session_state.page = 'predict'
+# واجهة الادخال
+c1, c2 = st.columns(2)
 
-# Prediction Page
-elif st.session_state.page == 'predict':
-    st.markdown("<h1 class='title-green'>Welcome to Murtad</h1>", unsafe_allow_html=True)
+with c1:
+    year = st.selectbox("Select Year", list(range(2020, 2031)))
+    province = st.selectbox("Select Province", ['Province A', 'Province B', 'Province C'])
 
-    st.sidebar.title("📘 About the App")
-    st.sidebar.info("""
-    This app predicts:
-    - **Number of Tourists**
-    - **Tourism Income (SAR)**
+with c2:
+    month = st.selectbox("Select Month", list(range(1, 13)))
+    tourism_type = st.selectbox("Select Tourism Type", ['Type A', 'Type B', 'Type C'])
 
-    Based on:
-    - Province
-    - Tourism Type
-    - Indicator
-    - Year
-    - Month
-    """)
-    st.sidebar.markdown("---")
+indicator = st.selectbox("Select Indicator", ['Number of Tourists', 'Tourism Income'])
 
-    st.markdown("<h3 class='custom-subtitle'>Customize Your Tourism Forecast</h3>", unsafe_allow_html=True)
+# زر التنبؤ
+if st.button('Predict'):
 
-    c1, c2 = st.columns(2)
+    # تجهيز الدخل (حل المشكلة هنا!)
+    input_df = pd.DataFrame({
+        'Province': [province],
+        'Tourism Type': [tourism_type],
+        'Indicator': [indicator],
+        'Year': [int(year)],
+        'Month': [int(month)]
+    })
 
-    with c1:
-        year = st.selectbox("Select Year", list(range(2020, 2030)))
-        month = st.selectbox("Select Month", list(range(1, 13)))
-        province = st.selectbox("Select Province", [
-            'Al Bahah', 'AlQassim', 'Aseer', 'Eastern Province', 'Hail',
-            'Jazan', 'Jouf', 'Madinah', 'Makkah', 'Najran',
-            'Northern Borders', 'Riyadh', 'Tabuk', 'Total'])
-
-    with c2:
-        indicator = st.selectbox("Select Indicator", [
-            "Overnight Visitors", "SAR"])
-        tourism_type = st.selectbox("Select Tourism Type", [
-            "domestics_tourism", "inbound_tourism"])
-
-    if st.button("Predict"):
-        input_data = pd.DataFrame({
-            'year': [year],
-            'month': [month],
-            'Province': [province],
-            'Indicator': [indicator],
-            'tourism type': [tourism_type]
-        })
-
-        prediction1 = model_tourist_number.predict(input_data)[0]
-        prediction2 = model_model_value.predict(input_data)[0]
-
-        st.success(f"Predicted Number of Tourists: {int(prediction1):,}")
-        st.success(f"Predicted Tourism Income (SAR): {prediction2:,.2f}")
+    # توقع على حسب المؤشر
+    if indicator == 'Number of Tourists':
+        prediction = model_tourist_number.predict(input_df)[0]
+        st.success(f"Predicted Number of Tourists: {prediction:,.0f}")
+    else:
+        prediction = model_model_value.predict(input_df)[0]
+        st.success(f"Predicted Tourism Income (SAR): {prediction:,.2f}")
